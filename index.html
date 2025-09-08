@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Bus Tracking System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+</head>
+<body>
+    <!-- Login/Register Screen -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="campus-bg"></div>
+            <div class="auth-content">
+                <div class="auth-header">
+                    <h1 class="campus-title">College Bus Tracking</h1>
+                    <p class="campus-subtitle">Smart Campus Transportation System</p>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="loginSection" class="auth-section">
+                    <form id="loginForm" class="auth-form">
+                        <h2 class="form-title">Welcome Back</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="role">Select Role</label>
+                            <select id="role" class="form-control" required>
+                                <option value="">Choose your role</option>
+                                <option value="student">Student</option>
+                                <option value="staff">Staff</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="username">Username</label>
+                            <input type="text" id="username" class="form-control" required placeholder="Enter username">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="password">Password</label>
+                            <input type="password" id="password" class="form-control" required placeholder="Enter password">
+                        </div>
+                        
+                        <button type="submit" class="btn btn--primary btn--full-width">Login</button>
+                        
+                        <p class="auth-switch">
+                            New student? <a href="#" id="showRegister">Register here</a>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerSection" class="auth-section hidden">
+                    <form id="registerForm" class="auth-form">
+                        <h2 class="form-title">Student Registration</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="regNumber">Register Number</label>
+                            <input type="text" id="regNumber" class="form-control" required 
+                                   placeholder="e.g., 24CS001" pattern="^[0-9]{2}[A-Z]{2}[0-9]{3}$">
+                            <small class="form-help">Format: 24CS001 (Year + Department + Number)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="regPassword">Create Password</label>
+                            <input type="password" id="regPassword" class="form-control" required 
+                                   placeholder="Create strong password">
+                            <div class="password-strength" id="passwordStrength"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" class="form-control" required 
+                                   placeholder="Confirm your password">
+                        </div>
+                        
+                        <button type="submit" class="btn btn--primary btn--full-width">Register</button>
+                        
+                        <p class="auth-switch">
+                            Already have an account? <a href="#" id="showLogin">Login here</a>
+                        </p>
+                    </form>
+                </div>
+
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="main-app hidden">
+        <!-- Navigation Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h2 id="appTitle">Bus Tracking System</h2>
+                    <span id="liveIndicator" class="live-indicator">LIVE</span>
+                </div>
+                <div class="header-center">
+                    <div class="theme-selector">
+                        <select id="themeSelector" class="theme-control form-control">
+                            <option value="default">Default Theme</option>
+                            <option value="dark">Dark Mode</option>
+                            <option value="bright">Bright Mode</option>
+                            <option value="minimalist">Minimalist</option>
+                            <option value="vibrant">Vibrant Campus</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="notification-bell" id="notificationBell">
+                        <span class="bell-icon">🔔</span>
+                        <span class="notification-count" id="notificationCount">0</span>
+                    </div>
+                    <span id="userInfo" class="user-info"></span>
+                    <button id="logoutBtn" class="btn btn--outline btn--sm">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-layout">
+            <!-- Sidebar Navigation -->
+            <nav class="app-sidebar">
+                <ul class="nav-menu" id="navMenu">
+                    <!-- Dynamic menu items -->
+                </ul>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="app-content">
+                <!-- Dashboard Overview -->
+                <section id="dashboard" class="content-section">
+                    <div class="dashboard-header">
+                        <h3 id="dashboardTitle">Dashboard</h3>
+                        <div class="dashboard-stats" id="dashboardStats"></div>
+                    </div>
+                    <div class="dashboard-grid" id="dashboardGrid"></div>
+                </section>
+
+                <!-- RFID Onboarding -->
+                <section id="rfid" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>RFID Onboarding</h3>
+                        <div class="rfid-status" id="rfidStatus">Ready to scan</div>
+                    </div>
+                    <div class="rfid-container">
+                        <div class="rfid-scanner" id="rfidScanner">
+                            <div class="scanner-area">
+                                <div class="scanner-animation"></div>
+                                <div class="card-placeholder">
+                                    <div class="rfid-card" id="rfidCard">
+                                        <h4>Tap Your RFID Card</h4>
+                                        <div class="card-chip"></div>
+                                    </div>
+                                </div>
+                                <button id="simulateRfid" class="btn btn--primary">Simulate RFID Tap</button>
+                            </div>
+                        </div>
+                        <div class="scan-history" id="scanHistory">
+                            <h4>Recent Scans</h4>
+                            <div class="scan-list" id="scanList"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Bus Tracking with ETA -->
+                <section id="tracking" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>Real-time Bus Tracking</h3>
+                        <div class="tracking-controls">
+                            <input id="routeSearch" type="text" class="form-control" placeholder="Search routes...">
+                        </div>
+                    </div>
+                    
+                    <div class="tracking-container">
+                        <div class="map-section">
+                            <div id="map" style="height: 500px; position: relative;"></div>
+                            <div class="eta-panel" id="etaPanel">
+                                <h4>Next Arrivals</h4>
+                                <div class="eta-list" id="etaList"></div>
+                            </div>
+                        </div>
+                        <div class="bus-list" id="busList"></div>
+                    </div>
+                    <div id="routeDetails" class="card" style="margin-top: 16px;">
+                        <div class="card__body">
+                            <h4 style="margin-bottom: 8px;">Route Details</h4>
+                            <div id="routeStops" class="scrollable"></div>
+                        </div>
+                    </div>
+                </section>
+
+                
+
+                <!-- Payment Gateway -->
+                <section id="payments" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>Payment Gateway</h3>
+                        <div class="security-badge">🔒 Secure Payment</div>
+                    </div>
+                    <div class="payment-container">
+                        <div class="payment-methods">
+                            <h4>Choose Payment Method</h4>
+                            <div class="payment-options">
+                                <div class="payment-option" data-method="upi">
+                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzFGQjhDRCIvPjx0ZXh0IHg9IjIwIiB5PSIyNSIgZm9udC1zaXplPSIxMiIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkdQYXk8L3RleHQ+PC9zdmc+" alt="UPI">
+                                    <span>UPI/GPay</span>
+                                </div>
+                                <div class="payment-option" data-method="card">
+                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iI0ZGQzE4NSIvPjx0ZXh0IHg9IjIwIiB5PSIyNSIgZm9udC1zaXplPSIxMiIgZmlsbD0iYmxhY2siIHRleHQtYW5jaG9yPSJtaWRkbGUiPkNhcmQ8L3RleHQ+PC9zdmc+" alt="Card">
+                                    <span>Credit/Debit Card</span>
+                                </div>
+                                <div class="payment-option" data-method="netbanking">
+                                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iI0I0NDEzQyIvPjx0ZXh0IHg9IjIwIiB5PSIyNSIgZm9udC1zaXplPSIxMCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJhbms8L3RleHQ+PC9zdmc+" alt="Net Banking">
+                                    <span>Net Banking</span>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        <div class="payment-form" id="paymentForm">
+                            <h4>Payment Details</h4>
+                            <div id="paymentFormContent"><p>Select a payment method to continue</p></div>
+                        </div>
+                        <div class="transaction-history">
+                            <h4>Transaction History</h4>
+                            <div id="transactionHistory" class="scrollable"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Notifications Center -->
+                <section id="notifications" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>Notifications</h3>
+                        <button id="markAllRead" class="btn btn--sm btn--outline">Mark All Read</button>
+                    </div>
+                    <div class="notifications-container">
+                        <div class="notification-filters">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="arrival">Arrival</button>
+                            <button class="filter-btn" data-filter="approval">Approval</button>
+                            <button class="filter-btn" data-filter="missed_bus">Missed Bus</button>
+                            <button class="filter-btn" data-filter="announcement">Announcements</button>
+                        </div>
+                        <div class="notifications-list scrollable" id="notificationsList"></div>
+                    </div>
+                </section>
+
+                <!-- User Management (Admin) -->
+                <section id="users" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>User Management</h3>
+                        <button id="addUserBtn" class="btn btn--primary">Add New User</button>
+                    </div>
+                    <div class="users-container">
+                        <div class="users-filters">
+                            <input type="text" id="userSearch" class="form-control" placeholder="Search users...">
+                            <select id="roleFilter" class="form-control">
+                                <option value="">All Roles</option>
+                                <option value="student">Students</option>
+                                <option value="staff">Staff</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="data-table-container">
+                            <div id="usersTable" class="scrollable"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Bus Management (Admin/Staff) -->
+                <section id="buses" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>Bus Fleet Management</h3>
+                        <button id="addBusBtn" class="btn btn--primary">Add New Bus</button>
+                    </div>
+                    <div class="buses-container">
+                        <div class="buses-grid" id="busesGrid"></div>
+                    </div>
+                </section>
+
+                <!-- Staff Activity Logs (Admin Only) -->
+                <section id="activityLogs" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>Staff Activity Logs</h3>
+                        <div class="log-filters">
+                            <input type="date" id="logDateFilter" class="form-control">
+                            <select id="logStaffFilter" class="form-control">
+                                <option value="">All Staff</option>
+                            </select>
+                            <select id="logActionFilter" class="form-control">
+                                <option value="">All Actions</option>
+                                <option value="APPROVED_BOOKING">Approved Booking</option>
+                                <option value="SENT_ANNOUNCEMENT">Sent Announcement</option>
+                                <option value="UPDATED_ROUTE">Updated Route</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="activity-logs-container">
+                        <div id="activityLogsTable" class="data-table-container scrollable"></div>
+                    </div>
+                </section>
+
+                <!-- Student Requests (Staff/Admin) -->
+                <section id="requests" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>Student Requests</h3>
+                        <div class="request-stats">
+                            <span class="stat-badge pending">Pending: <span id="pendingCount">0</span></span>
+                            <span class="stat-badge approved">Approved: <span id="approvedCount">0</span></span>
+                        </div>
+                    </div>
+                    <div class="requests-container">
+                        <div class="requests-list scrollable" id="requestsList"></div>
+                    </div>
+                </section>
+
+                <!-- Announcements -->
+                <section id="announcements" class="content-section hidden">
+                    <div class="section-header">
+                        <h3>Announcements</h3>
+                        <button id="addAnnouncementBtn" class="btn btn--primary">New Announcement</button>
+                    </div>
+                    <div class="announcements-container">
+                        <div id="announcementsList" class="announcements-list scrollable"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner hidden">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <div class="spinner-text">
+                <h3>Processing...</h3>
+                <p id="loadingMessage">Please wait</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Forms -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="modalTitle">Modal Title</h4>
+                <button id="modalClose" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container">
+        <div id="toast" class="toast hidden">
+            <div class="toast-icon" id="toastIcon"></div>
+            <div class="toast-content">
+                <span id="toastMessage"></span>
+            </div>
+            <button id="toastClose" class="toast-close">&times;</button>
+        </div>
+    </div>
+
+    <!-- Push Notification Overlay -->
+    <div id="pushNotification" class="push-notification hidden">
+        <div class="push-content">
+            <div class="push-icon">🚌</div>
+            <div class="push-text">
+                <h4 id="pushTitle"></h4>
+                <p id="pushMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script type="module" src="firebase-rfid.js"></script>
+</body>
+</html>
