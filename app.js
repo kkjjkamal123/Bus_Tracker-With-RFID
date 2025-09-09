@@ -1,7 +1,3 @@
-const collegeLat = 13.0108;  // Anna University (example)
-const collegeLng = 80.2337;
-
-
 class AdvancedBusTrackingApp {
     constructor() {
         // Application state
@@ -1042,16 +1038,7 @@ class AdvancedBusTrackingApp {
 
     loadDashboard() {
         this.loadDashboardStats();
-        this.loadDashboardCards();
-        navigator.geolocation.getCurrentPosition((position) => {
-        const userLat = position.coords.latitude;
-        const userLng = position.coords.longitude;
-
-        const distance = calculateDistance(userLat, userLng, collegeLat, collegeLng);
-        document.getElementById("distanceDisplay").textContent =
-        `📍 Distance to college: ${distance.toFixed(2)} km`;
-    });
-
+        this.loadDashboardCards(); 
     }
 
     loadDashboardStats() {
