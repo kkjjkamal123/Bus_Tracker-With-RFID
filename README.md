@@ -41,6 +41,8 @@ enhanced-bus-tracker/
 ├── style.css           # Enhanced CSS with themes & animations
 ├── app.js              # Complete JavaScript application
 ├── README.md           # This documentation
+├── firebase-rfid.js    # Contains inclusion of Firebase of RFID to Site
+├── firebase-key.js     # Keys for the FireBase
 └── package.json        # Dependencies (for future Node.js backend)
 ```
 
