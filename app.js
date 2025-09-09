@@ -1,4 +1,5 @@
-// Advanced College Bus Tracking System - Bug-Free Implementation
+const collegeLat = 13.0108;  // Anna University (example)
+const collegeLng = 80.2337;
 
 
 class AdvancedBusTrackingApp {
@@ -960,6 +961,17 @@ class AdvancedBusTrackingApp {
             notificationCount.style.display = unreadCount > 0 ? 'flex' : 'none';
         }
     }
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of Earth in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
 
     navigateToSection(section) {
         try {
@@ -1031,6 +1043,15 @@ class AdvancedBusTrackingApp {
     loadDashboard() {
         this.loadDashboardStats();
         this.loadDashboardCards();
+        navigator.geolocation.getCurrentPosition((position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+
+        const distance = calculateDistance(userLat, userLng, collegeLat, collegeLng);
+        document.getElementById("distanceDisplay").textContent =
+        `📍 Distance to college: ${distance.toFixed(2)} km`;
+    });
+
     }
 
     loadDashboardStats() {
