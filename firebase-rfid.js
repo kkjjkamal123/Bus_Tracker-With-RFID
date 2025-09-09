@@ -3,13 +3,13 @@ import { getDatabase, ref, push, set, onChildAdded } from "https://www.gstatic.c
 
 // Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCB6045UU5JkqoEFDQY_dcSHEbTdAaGZ5k",
-  authDomain: "bus-track-afe0a.firebaseapp.com",
-  databaseURL: "https://bus-track-afe0a-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "bus-track-afe0a",
-  storageBucket: "bus-track-afe0a.firebasestorage.app",
-  messagingSenderId: "597659366932",
-  appId: "1:597659366932:web:ba28c6dd63b5f6f5821901"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
@@ -37,3 +37,4 @@ onChildAdded(logRef, (snapshot) => {
   const scan = snapshot.val();
   addScanToUI(scan);
 });
+
